@@ -7,6 +7,7 @@ venv/
 # Node
 node_modules/
 .nuxt/
+.output/
 dist/
 
 # IDE
