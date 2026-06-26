@@ -1,47 +1,161 @@
-﻿/* Cyberpunk UI Theme — global styles */
+﻿/* ============================================
+   Nexus-Lore — Cyberpunk Design System
+   Based on UI/UX Pro Max guidelines
+   ============================================ */
+
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-secondary: #12121a;
-  --bg-card: #1a1a2e;
-  --border-color: #2a2a4a;
-  --accent-cyan: #00f0ff;
-  --accent-magenta: #ff00aa;
-  --accent-yellow: #ffd700;
-  --text-primary: #e0e0f0;
-  --text-secondary: #8888aa;
-  --text-dim: #555577;
-  --danger: #ff3355;
-  --success: #00ff88;
-  --warning: #ffaa00;
+  /* ---- Color Tokens (Semantic) ---- */
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #12121a;
+  --color-bg-card: #1a1a2e;
+  --color-bg-card-hover: #1f1f3a;
+  --color-bg-elevated: #24243e;
+  --color-bg-input: #0d0d14;
+  --color-border: #2a2a4a;
+  --color-border-hover: #3a3a5a;
+  --color-border-focus: #00f0ff;
+
+  --color-text-primary: #e0e0f0;
+  --color-text-secondary: #8888aa;
+  --color-text-muted: #555577;
+  --color-text-inverse: #0a0a0f;
+
+  --color-accent-cyan: #00f0ff;
+  --color-accent-magenta: #ff00aa;
+  --color-accent-yellow: #ffd700;
+  --color-accent-purple: #a855f7;
+  --color-accent-green: #00ff88;
+
+  --color-danger: #ff3355;
+  --color-warning: #ffaa00;
+  --color-success: #00ff88;
+  --color-info: #00b4ff;
+
+  --color-glass-bg: rgba(26, 26, 46, 0.6);
+  --color-glass-border: rgba(42, 42, 74, 0.4);
+
+  /* ---- Shadows ---- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow-cyan: 0 0 16px rgba(0, 240, 255, 0.15);
+  --shadow-glow-magenta: 0 0 16px rgba(255, 0, 170, 0.15);
+
+  /* ---- Typography ---- */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 36px;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.7;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* ---- Spacing (4px / 8px system) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Border Radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+
+  /* ---- Animation ---- */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Layout ---- */
+  --sidebar-width: 240px;
+  --sidebar-collapsed-width: 64px;
+  --header-height: 0px;
 }
 
-* {
+/* ---- Reset & Base ---- */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
   overflow: hidden;
 }
 
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+a {
+  color: var(--color-accent-cyan);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--easing-default);
 }
 
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+a:hover {
+  color: #33f3ff;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 3px;
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-hover); }
+
+/* ---- Focus Ring ---- */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-accent-cyan);
+  border-radius: var(--radius-sm);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #3a3a5a;
+/* ---- Selection ---- */
+::selection {
+  background: rgba(0, 240, 255, 0.2);
+  color: var(--color-text-primary);
+}
+
+/* ---- Utility Classes ---- */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  border: 0;
 }

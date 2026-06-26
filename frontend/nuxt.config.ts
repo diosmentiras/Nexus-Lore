@@ -6,9 +6,12 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
-        { rel: "stylesheet", href: "/cyberpunk.css" }
-      ]
-    }
+        { rel: "stylesheet", href: "/cyberpunk.css" },
+      ],
+    },
+  },
+  imports: {
+    autoImport: false,
   },
   tailwindcss: {
     config: {
