@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+asyncpg://nexus:nexus_pass@localhost:5432/nexus_lore"
 
     # ---- AI Provider ----
-    ai_provider: str = "ollama"  # ollama | openai | deepseek
+    ai_provider: str = "ollama"
     ai_api_key: str | None = None
     ai_endpoint: str = "http://localhost:11434"
     ai_model: str = "llama3"

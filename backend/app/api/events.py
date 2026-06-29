@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import uuid
+
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -37,7 +37,7 @@ async def list_events(
 
 
 @router.get("/{event_id}", response_model=EventResponse)
-async def get_event(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_event(event_id: str, db: AsyncSession = Depends(get_db)):
     event = await db.get(Event, event_id)
     if not event:
         raise HTTPException(404, "Event not found")
@@ -54,7 +54,7 @@ async def create_event(data: EventCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/{event_id}", response_model=EventResponse)
-async def update_event(event_id: uuid.UUID, data: EventUpdate, db: AsyncSession = Depends(get_db)):
+async def update_event(event_id: str, data: EventUpdate, db: AsyncSession = Depends(get_db)):
     event = await db.get(Event, event_id)
     if not event:
         raise HTTPException(404, "Event not found")
@@ -66,7 +66,7 @@ async def update_event(event_id: uuid.UUID, data: EventUpdate, db: AsyncSession 
 
 
 @router.delete("/{event_id}", status_code=204)
-async def delete_event(event_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def delete_event(event_id: str, db: AsyncSession = Depends(get_db)):
     event = await db.get(Event, event_id)
     if not event:
         raise HTTPException(404, "Event not found")

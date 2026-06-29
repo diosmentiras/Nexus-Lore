@@ -10,9 +10,6 @@ export default defineNuxtConfig({
       ],
     },
   },
-  imports: {
-    autoImport: false,
-  },
   tailwindcss: {
     config: {
       theme: {

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import uuid
+
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -24,8 +24,8 @@ router = APIRouter(prefix="/api/relations", tags=["Relations"])
 
 @router.get("", response_model=list[RelationResponse])
 async def list_relations(
-    source_id: uuid.UUID | None = None,
-    target_id: uuid.UUID | None = None,
+    source_id: str | None = None,
+    target_id: str | None = None,
     relation_type: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
@@ -55,7 +55,7 @@ async def create_relation(data: RelationCreate, db: AsyncSession = Depends(get_d
 
 
 @router.delete("/{relation_id}", status_code=204)
-async def delete_relation(relation_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def delete_relation(relation_id: str, db: AsyncSession = Depends(get_db)):
     relation = await db.get(Relation, relation_id)
     if not relation:
         raise HTTPException(404, "Relation not found")

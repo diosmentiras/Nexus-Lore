@@ -21,3 +21,6 @@ Thumbs.db
 
 # Docker
 pgdata/
+
+# Backend data (SQLite local dev)
+backend/data/

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
-
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,12 +18,10 @@ async def list_entities(
     type: str | None = Query(None),
     search: str | None = Query(None),
     tag: str | None = Query(None),
-    faction_id: uuid.UUID | None = Query(None),
+    faction_id: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ):
-    """获取实体列表，支持按类型/搜索/标签/阵营过滤"""
     stmt = select(Entity).order_by(Entity.updated_at.desc())
-
     if type:
         stmt = stmt.where(Entity.entity_type == type)
     if search:
@@ -34,13 +30,12 @@ async def list_entities(
         stmt = stmt.where(Entity.tags.any(tag))
     if faction_id:
         stmt = stmt.where(Entity.faction_id == faction_id)
-
     result = await db.execute(stmt)
     return result.scalars().all()
 
 
 @router.get("/{entity_id}", response_model=EntityResponse)
-async def get_entity(entity_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
     entity = await db.get(Entity, entity_id)
     if not entity:
         raise HTTPException(404, "Entity not found")
@@ -57,7 +52,7 @@ async def create_entity(data: EntityCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.patch("/{entity_id}", response_model=EntityResponse)
-async def update_entity(entity_id: uuid.UUID, data: EntityUpdate, db: AsyncSession = Depends(get_db)):
+async def update_entity(entity_id: str, data: EntityUpdate, db: AsyncSession = Depends(get_db)):
     entity = await db.get(Entity, entity_id)
     if not entity:
         raise HTTPException(404, "Entity not found")
@@ -69,7 +64,7 @@ async def update_entity(entity_id: uuid.UUID, data: EntityUpdate, db: AsyncSessi
 
 
 @router.delete("/{entity_id}", status_code=204)
-async def delete_entity(entity_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def delete_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
     entity = await db.get(Entity, entity_id)
     if not entity:
         raise HTTPException(404, "Entity not found")

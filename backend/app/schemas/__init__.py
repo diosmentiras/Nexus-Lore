@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 class EntityBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     entity_type: str = Field(..., pattern=r"^(character|faction|item|location|event|containment)$")
-    faction_id: uuid.UUID | None = None
+    faction_id: str | None = None
     summary: str | None = None
     background: str | None = None
     tags: list[str] = []
@@ -28,7 +28,7 @@ class EntityCreate(EntityBase):
 class EntityUpdate(BaseModel):
     name: str | None = None
     entity_type: str | None = None
-    faction_id: uuid.UUID | None = None
+    faction_id: str | None = None
     summary: str | None = None
     background: str | None = None
     tags: list[str] | None = None
@@ -38,7 +38,7 @@ class EntityUpdate(BaseModel):
 
 
 class EntityResponse(EntityBase):
-    id: uuid.UUID
+    id: str
     created_at: datetime
     updated_at: datetime
     extracted_by_ai: bool
@@ -49,8 +49,8 @@ class EntityResponse(EntityBase):
 # ===================== Relation =====================
 
 class RelationBase(BaseModel):
-    source_id: uuid.UUID
-    target_id: uuid.UUID
+    source_id: str
+    target_id: str
     relation_type: str = Field(..., pattern=r"^(ally|hostile|neutral|member|owns|located_at|other)$")
     label: str | None = None
     date_start: str | None = None
@@ -62,7 +62,7 @@ class RelationCreate(RelationBase):
 
 
 class RelationResponse(RelationBase):
-    id: uuid.UUID
+    id: str
     created_at: datetime
     updated_at: datetime
     metadata: dict[str, Any] = Field(default={}, alias="meta")
@@ -95,7 +95,7 @@ class EventUpdate(BaseModel):
 
 
 class EventResponse(EventBase):
-    id: uuid.UUID
+    id: str
     created_at: datetime
     updated_at: datetime
     date_order: int
@@ -111,16 +111,16 @@ class LintIssueBase(BaseModel):
     severity: str = Field(default="warning", pattern=r"^(error|warning|info)$")
     title: str = Field(..., min_length=1, max_length=255)
     description: str | None = None
-    entity1_id: uuid.UUID | None = None
-    entity2_id: uuid.UUID | None = None
+    entity1_id: str | None = None
+    entity2_id: str | None = None
     entity1_name: str | None = None
     entity2_name: str | None = None
     issue_type: str | None = None
-    source_lore_id: uuid.UUID | None = None
+    source_lore_id: str | None = None
 
 
 class LintIssueResponse(LintIssueBase):
-    id: uuid.UUID
+    id: str
     resolved: bool
     created_at: datetime
     updated_at: datetime
