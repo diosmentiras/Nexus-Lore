@@ -1,4 +1,4 @@
-﻿# Nexus-Lore
+# Nexus-Lore
 
 > **设定即数据 (Lore as Data)** —— 专为硬核创作者、科幻作家及跑团 DM 打造的自托管世界观构建终端。
 
