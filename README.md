@@ -8,7 +8,7 @@
 
 ## 项目结构
 
-`
+```text
 nexus-lore/
 ├── frontend/                      # Nuxt.js 前端
 │   ├── app.vue                    # 根组件
@@ -81,7 +81,7 @@ nexus-lore/
 ├── .gitignore
 ├── LICENSE                        # MIT
 └── README.md
-`
+```
 
 ---
 
@@ -126,19 +126,19 @@ nexus-lore/
 - Docker & Docker Compose
 
 ### 1. 克隆仓库
-`ash
+`
 git clone git@github.com:diosmentiras/Nexus-Lore.git
 cd Nexus-Lore
 `
 
 ### 2. 配置环境 (可选)
-`ash
+`
 cp .env.example .env
 `
 编辑 .env 填写你的 AI 密钥（若使用本地 Ollama 则无需配置云端 API）。
 
 ### 3. 启动
-`ash
+`
 docker compose up -d
 `
 
@@ -156,7 +156,7 @@ docker compose up -d
 ### Step 2: AI 自动拆解并生成卡片
 点击 [AI Extract]，右侧工作台将实时生成以下结构化设定并存入数据库：
 
-`yaml
+```yaml
 ---
 name: John Doe
 type: character
@@ -167,7 +167,7 @@ tags: [雇佣兵, 赛博义体]
 ---
 背景故事:
   在 2076 年的数据中心事件中负责拦截黑客 Jane……
-`
+```
 
 ### Step 3: 静态维基与图谱同步更新
 底层图谱与时间线会自动连线，生成 Jane 与 John Doe 的红线敌对图谱，并在 2076 年的时间轴上钉下一个名为"数据中心冲突"的锚点。
