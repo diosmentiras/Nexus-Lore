@@ -1,28 +1,8 @@
-﻿[project]
+[project]
 name = "nexus-lore-backend"
 version = "0.1.0"
-description = "Nexus-Lore Backend API — Lore as Data"
+description = "Nexus-Lore Backend API"
 requires-python = ">=3.12"
-dependencies = [
-    "fastapi>=0.115.0",
-    "uvicorn[standard]>=0.32.0",
-    "sqlalchemy[asyncio]>=2.0.36",
-    "asyncpg>=0.30.0",
-    "alembic>=1.14.0",
-    "pydantic>=2.10.0",
-    "pydantic-settings>=2.6.0",
-    "python-dotenv>=1.0.1",
-    "httpx>=0.28.0",
-    "openai>=1.55.0",
-]
-
-[project.optional-dependencies]
-ai = [
-    "langchain>=0.3.0",
-    "langchain-community>=0.3.0",
-    "langchain-openai>=0.2.0",
-    "langchain-ollama>=0.2.0",
-]
 
 [tool.ruff]
 line-length = 120
