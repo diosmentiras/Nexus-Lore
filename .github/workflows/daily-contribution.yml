@@ -1,0 +1,19 @@
+name: Daily Contribution
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Daily update
+        run: |
+          echo '# Last updated: $(date -u +%Y-%m-%d)' > LAST_UPDATED
+          git config user.name diosmentiras
+          git config user.email 2631948830@qq.com
+          git add LAST_UPDATED
+          git diff --cached --quiet || (git commit -m 'chore: daily maintenance update' && git push)

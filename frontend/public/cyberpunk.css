@@ -1,4 +1,4 @@
-﻿/* ============================================
+/* ============================================
    Nexus-Lore — Cyberpunk Design System
    Based on UI/UX Pro Max guidelines
    ============================================ */
@@ -158,4 +158,25 @@ a:hover {
   overflow: hidden;
   clip: rect(0,0,0,0);
   border: 0;
+}
+
+/* ---- Animations ---- */
+@keyframes neonPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glowRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes dataStream {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }

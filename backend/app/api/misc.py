@@ -1,4 +1,4 @@
-﻿"""Dashboard & Export API"""
+"""Dashboard & Export API"""
 
 from __future__ import annotations
 
@@ -9,6 +9,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models import Entity, Event, LintIssue, Relation
 from app.schemas import DashboardStats
+
+
+@router.get("/version")
+async def get_version():
+    """获取 Nexus-Lore 版本信息"""
+    return {
+        "name": "Nexus-Lore",
+        "version": "0.1.0",
+        "description": "Lore as Data — 自托管世界观构建终端",
+        "tagline": "设定即数据"
+    }
 
 router = APIRouter(prefix="/api", tags=["Dashboard"])
 

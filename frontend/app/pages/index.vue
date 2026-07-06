@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="dashboard">
     <header class="page-header">
       <div>
@@ -9,7 +9,7 @@
 
     <!-- Stats Grid -->
     <div class="stats-grid">
-      <div v-for="stat in stats" :key="stat.label" class="stat-card" :style="{ '--stat-color': stat.color }">
+      <div v-for="(stat, idx) in stats" :key="stat.label" class="stat-card" :style="{ '--stat-color': stat.color, '--delay': idx * 0.06 + 's' }">
         <div class="stat-icon-wrapper">
           <component :is="stat.icon" :size="20" aria-hidden="true" />
         </div>
@@ -43,7 +43,7 @@
         </div>
         <div class="panel-body">
           <div class="quick-actions">
-            <NuxtLink v-for="action in quickActions" :key="action.to" :to="action.to" class="action-card">
+            <NuxtLink v-for="(action, idx) in quickActions" :key="action.to" :to="action.to" class="action-card" :style="{ '--delay': (6 + idx * 0.08) + 's' }">
               <component :is="action.icon" :size="18" class="action-icon" aria-hidden="true" :style="{ color: action.color }" />
               <div class="action-info">
                 <span class="action-title">{{ action.title }}</span>
@@ -121,6 +121,8 @@ const quickActions: QuickAction[] = [
 /* Page Header */
 .page-header {
   margin-bottom: var(--space-8);
+  animation: slideUp 0.4s var(--easing-spring) both;
+  animation-delay: 0s;
 }
 
 .page-title {
@@ -154,6 +156,29 @@ const quickActions: QuickAction[] = [
   gap: var(--space-4);
   transition: all var(--duration-normal) var(--easing-default);
   cursor: default;
+  animation: slideUp 0.4s var(--easing-spring) both;
+  animation-delay: var(--delay, 0s);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1px;
+  background: linear-gradient(135deg, var(--stat-color), transparent 60%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--easing-default);
+  pointer-events: none;
+}
+
+.stat-card:hover::before {
+  opacity: 0.5;
 }
 
 .stat-card:hover {
@@ -221,10 +246,13 @@ const quickActions: QuickAction[] = [
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: all var(--duration-normal) var(--easing-default);
+  animation: slideUp 0.4s var(--easing-spring) both;
+  animation-delay: 0.12s;
 }
 
 .panel:hover {
   border-color: var(--color-border-hover);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.05);
 }
 
 .panel-header {
