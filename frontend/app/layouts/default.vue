@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="nexus-layout">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -32,6 +32,7 @@
           <SettingsIcon class="nav-icon" :size="18" aria-hidden="true" />
           <span class="nav-label">Settings</span>
         </NuxtLink>
+        <div class="version-badge">v0.1.0</div>
       </div>
     </aside>
 
