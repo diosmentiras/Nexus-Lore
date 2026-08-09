@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import json
+from typing import Any
+
+import httpx
+
 from app.config import settings
 
 
@@ -14,13 +19,116 @@ class AiService:
         self.api_key = settings.ai_api_key
         self.model = settings.ai_model
 
+    def _prompt(self, text: str, types: list[str]) -> list[dict[str, str]]:
+        system = (
+            "你是世界观设定资料整理助手。"
+            "请从文章中抽取可复用的设定数据，只输出 JSON，不输出 Markdown。"
+            "不要复述长段原文；用简洁中文总结，并保留出处线索。"
+            "关系类型只能使用 ally, hostile, neutral, member, owns, located_at, other。"
+            "实体类型只能使用 character, faction, item, location, event, containment。"
+        )
+        schema = {
+            "entities": [
+                {
+                    "name": "实体名",
+                    "entity_type": "character|faction|item|location|event|containment",
+                    "summary": "一句话摘要",
+                    "background": "较完整但不冗长的设定说明",
+                    "tags": ["标签"],
+                    "date": "明确时间，没有则为 null",
+                    "date_context": "时间依据或模糊时间描述",
+                    "relations": [
+                        {"target": "另一实体名", "relation_type": "member|hostile|ally|neutral|owns|located_at|other", "label": "关系说明"}
+                    ],
+                }
+            ],
+            "events": [
+                {
+                    "title": "事件名",
+                    "description": "事件摘要",
+                    "date": "时间点或年代，没有明确时间则用 unknown",
+                    "date_context": "时间依据",
+                    "entities": ["相关实体名"],
+                    "tags": ["标签"],
+                }
+            ],
+        }
+        user = (
+            f"需要抽取的类型：{', '.join(types)}\n"
+            f"输出 JSON 结构示例：{json.dumps(schema, ensure_ascii=False)}\n\n"
+            f"文章正文：\n{text}"
+        )
+        return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+    def _empty_result(self) -> dict[str, list[dict[str, Any]]]:
+        return {"entities": [], "events": []}
+
+    def _normalize_result(self, result: Any) -> dict[str, list[dict[str, Any]]]:
+        if not isinstance(result, dict):
+            return self._empty_result()
+        entities = result.get("entities") if isinstance(result.get("entities"), list) else []
+        events = result.get("events") if isinstance(result.get("events"), list) else []
+        return {"entities": entities, "events": events}
+
+    async def extract_lore(self, text: str, types: list[str]) -> dict[str, list[dict[str, Any]]]:
+        """将原始文本解析为实体、事件与关系。"""
+        if not text.strip():
+            return self._empty_result()
+
+        messages = self._prompt(text, types)
+        if self.provider == "ollama":
+            return await self._extract_with_ollama(messages)
+        if self.provider in {"openai", "deepseek"} and self.api_key:
+            return await self._extract_with_openai_compatible(messages)
+        return self._empty_result()
+
     async def extract_entities(self, text: str, types: list[str]) -> list[dict]:
-        """将原始文本解析为结构化实体列表"""
-        # TODO: 实现 LLM 调用
-        # - 构建 system prompt（NER 指令）
-        # - 调用 LLM（流式 / 非流式）
-        # - 解析 JSON 结果
-        return []
+        """兼容旧调用：只返回实体。"""
+        result = await self.extract_lore(text, types)
+        return result["entities"]
+
+    async def _extract_with_ollama(self, messages: list[dict[str, str]]) -> dict[str, list[dict[str, Any]]]:
+        url = self.endpoint.rstrip("/") + "/api/chat"
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(
+                url,
+                json={
+                    "model": self.model,
+                    "messages": messages,
+                    "stream": False,
+                    "format": "json",
+                },
+            )
+            response.raise_for_status()
+        content = response.json().get("message", {}).get("content", "{}")
+        try:
+            parsed = json.loads(content)
+        except json.JSONDecodeError:
+            return self._empty_result()
+        return self._normalize_result(parsed)
+
+    async def _extract_with_openai_compatible(self, messages: list[dict[str, str]]) -> dict[str, list[dict[str, Any]]]:
+        from openai import AsyncOpenAI
+
+        endpoint = self.endpoint
+        if self.provider == "openai" and endpoint == "http://localhost:11434":
+            endpoint = "https://api.openai.com/v1"
+        if self.provider == "deepseek" and endpoint == "http://localhost:11434":
+            endpoint = "https://api.deepseek.com"
+
+        client = AsyncOpenAI(api_key=self.api_key, base_url=endpoint)
+        response = await client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            response_format={"type": "json_object"},
+            temperature=0.1,
+        )
+        content = response.choices[0].message.content or "{}"
+        try:
+            parsed = json.loads(content)
+        except json.JSONDecodeError:
+            return self._empty_result()
+        return self._normalize_result(parsed)
 
     async def resolve_fuzzy_date(self, context: str) -> str | None:
         """解析模糊时间描述（如"三年后"）"""

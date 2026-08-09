@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
 from app.schemas import AiExtractRequest, AiExtractResponse
+from app.services.extraction_service import analyze_and_persist
 
 router = APIRouter(prefix="/api/extract", tags=["AI Extract"])
 
@@ -21,6 +22,10 @@ async def ai_extract(data: AiExtractRequest, db: AsyncSession = Depends(get_db))
     2. 调用 LLM 进行 NER 实体抽取
     3. 结果结构化并返回
     """
-    # TODO: 集成 LangChain + Ollama/OpenAI
-    # 当前返回空结构（骨架已就绪）
-    return AiExtractResponse(entities=[], events=[])
+    return await analyze_and_persist(
+        db,
+        text=data.text,
+        world_id=data.world_id,
+        source_document_id=data.source_document_id,
+        types=data.types,
+    )

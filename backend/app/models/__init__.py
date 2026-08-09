@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Text, TypeDecorator, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, TypeDecorator, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY, JSONB as PG_JSONB, UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -85,10 +85,45 @@ class TimestampMixin:
 
 # ---- Models ---- #
 
-class Entity(Base, TimestampMixin):
-    __tablename__ = "entities"
+class World(Base, TimestampMixin):
+    __tablename__ = "worlds"
 
     id: Mapped[str] = mapped_column(_uuid_col(), primary_key=True, default=_gen_id)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    slug: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    meta: Mapped[dict[str, Any]] = mapped_column(JSONType(), default=dict, nullable=False)
+
+
+class SourceDocument(Base, TimestampMixin):
+    __tablename__ = "source_documents"
+    __table_args__ = (
+        UniqueConstraint("world_id", "url", name="uq_source_documents_world_url"),
+        Index("ix_source_documents_world_status_id", "world_id", "status", "id"),
+        Index("ix_source_documents_world_updated_id", "world_id", "updated_at", "id"),
+    )
+
+    id: Mapped[str] = mapped_column(_uuid_col(), primary_key=True, default=_gen_id)
+    world_id: Mapped[str] = mapped_column(_uuid_col(), ForeignKey("worlds.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    source_site: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String(30), nullable=False, default="imported", index=True)
+    analysis_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+    meta: Mapped[dict[str, Any]] = mapped_column(JSONType(), default=dict, nullable=False)
+
+    world: Mapped[World] = relationship("World")
+
+class Entity(Base, TimestampMixin):
+    __tablename__ = "entities"
+    __table_args__ = (Index("ix_entities_world_type_id", "world_id", "entity_type", "id"),)
+
+    id: Mapped[str] = mapped_column(_uuid_col(), primary_key=True, default=_gen_id)
+    world_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("worlds.id", ondelete="CASCADE"), nullable=True, index=True)
+    source_document_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("source_documents.id", ondelete="SET NULL"), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
     entity_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     faction_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("entities.id"), nullable=True, index=True)
@@ -101,6 +136,8 @@ class Entity(Base, TimestampMixin):
     source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     extracted_by_ai: Mapped[bool] = mapped_column(default=False)
 
+    world: Mapped[World | None] = relationship("World")
+    source_document: Mapped[SourceDocument | None] = relationship("SourceDocument")
     faction: Mapped[Entity | None] = relationship("Entity", remote_side="Entity.id", foreign_keys=[faction_id])
 
 
@@ -108,6 +145,8 @@ class Relation(Base, TimestampMixin):
     __tablename__ = "relations"
 
     id: Mapped[str] = mapped_column(_uuid_col(), primary_key=True, default=_gen_id)
+    world_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("worlds.id", ondelete="CASCADE"), nullable=True, index=True)
+    source_document_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("source_documents.id", ondelete="SET NULL"), nullable=True, index=True)
     source_id: Mapped[str] = mapped_column(_uuid_col(), ForeignKey("entities.id", ondelete="CASCADE"), nullable=False, index=True)
     target_id: Mapped[str] = mapped_column(_uuid_col(), ForeignKey("entities.id", ondelete="CASCADE"), nullable=False, index=True)
     relation_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
@@ -116,6 +155,8 @@ class Relation(Base, TimestampMixin):
     date_end: Mapped[str | None] = mapped_column(String(50), nullable=True)
     meta: Mapped[dict[str, Any]] = mapped_column(JSONType(), default=dict, nullable=False)
 
+    world: Mapped[World | None] = relationship("World")
+    source_document: Mapped[SourceDocument | None] = relationship("SourceDocument")
     source: Mapped[Entity] = relationship("Entity", foreign_keys=[source_id])
     target: Mapped[Entity] = relationship("Entity", foreign_keys=[target_id])
 
@@ -124,6 +165,8 @@ class Event(Base, TimestampMixin):
     __tablename__ = "events"
 
     id: Mapped[str] = mapped_column(_uuid_col(), primary_key=True, default=_gen_id)
+    world_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("worlds.id", ondelete="CASCADE"), nullable=True, index=True)
+    source_document_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("source_documents.id", ondelete="SET NULL"), nullable=True, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     date: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
@@ -135,11 +178,15 @@ class Event(Base, TimestampMixin):
     source_text: Mapped[str | None] = mapped_column(Text, nullable=True)
     extracted_by_ai: Mapped[bool] = mapped_column(default=False)
 
+    world: Mapped[World | None] = relationship("World")
+    source_document: Mapped[SourceDocument | None] = relationship("SourceDocument")
+
 
 class LintIssue(Base, TimestampMixin):
     __tablename__ = "lint_issues"
 
     id: Mapped[str] = mapped_column(_uuid_col(), primary_key=True, default=_gen_id)
+    world_id: Mapped[str | None] = mapped_column(_uuid_col(), ForeignKey("worlds.id", ondelete="CASCADE"), nullable=True, index=True)
     severity: Mapped[str] = mapped_column(String(20), nullable=False, default="warning")
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

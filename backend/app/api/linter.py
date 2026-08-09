@@ -15,11 +15,14 @@ router = APIRouter(prefix="/api/linter", tags=["Linter"])
 
 @router.get("/issues", response_model=list[LintIssueResponse])
 async def list_issues(
+    world_id: str | None = None,
     resolved: bool | None = None,
     severity: str | None = None,
     db: AsyncSession = Depends(get_db),
 ):
     stmt = select(LintIssue).order_by(LintIssue.created_at.desc())
+    if world_id:
+        stmt = stmt.where(LintIssue.world_id == world_id)
     if resolved is not None:
         stmt = stmt.where(LintIssue.resolved == resolved)
     if severity:
@@ -29,7 +32,7 @@ async def list_issues(
 
 
 @router.post("/run", response_model=LintRunResponse)
-async def run_lint(db: AsyncSession = Depends(get_db)):
+async def run_lint(world_id: str | None = None, db: AsyncSession = Depends(get_db)):
     """
     运行全量设定冲突检查。
 

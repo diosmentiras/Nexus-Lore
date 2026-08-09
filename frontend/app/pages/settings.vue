@@ -8,6 +8,39 @@
     </header>
 
     <div class="settings-sections">
+      <!-- Worlds -->
+      <section class="settings-section">
+        <div class="section-header">
+          <Globe2Icon :size="16" aria-hidden="true" />
+          <h2 class="section-title">世界观</h2>
+        </div>
+
+        <div class="setting-row stacked">
+          <label class="setting-label">新建世界观</label>
+          <div class="world-form">
+            <input v-model="newWorldName" class="setting-input" placeholder="SCP 基金会中文分站" />
+            <input v-model="newWorldSlug" class="setting-input" placeholder="scp-cn" />
+            <button class="btn btn-secondary" @click="addWorld" :disabled="!newWorldName.trim() || !newWorldSlug.trim()">
+              <PlusIcon :size="16" aria-hidden="true" />
+              新建
+            </button>
+          </div>
+        </div>
+
+        <div class="world-list">
+          <button
+            v-for="world in worlds"
+            :key="world.id"
+            class="world-row"
+            :class="{ active: selectedWorldId === world.id }"
+            @click="selectedWorldId = world.id"
+          >
+            <span>{{ world.name }}</span>
+            <code>{{ world.slug }}</code>
+          </button>
+        </div>
+      </section>
+
       <!-- AI Provider -->
       <section class="settings-section">
         <div class="section-header">
@@ -111,15 +144,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { onMounted, ref } from "vue"
 import {
-  Cpu,
-  Eye,
-  EyeOff,
-  Database,
-  Download,
-  Trash2,
-  Info,
+  Cpu as CpuIcon,
+  Globe2 as Globe2Icon,
+  Plus as PlusIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
+  Database as DatabaseIcon,
+  Download as DownloadIcon,
+  Trash2 as Trash2Icon,
+  Info as InfoIcon,
 } from "lucide-vue-next"
 
 const aiProvider = ref("ollama")
@@ -127,6 +162,22 @@ const apiKey = ref("")
 const apiEndpoint = ref("")
 const modelName = ref("")
 const showKey = ref(false)
+const { worlds, selectedWorldId, loadWorlds, createWorld } = useWorlds()
+const newWorldName = ref("")
+const newWorldSlug = ref("")
+
+onMounted(() => {
+  loadWorlds()
+})
+
+async function addWorld() {
+  await createWorld({
+    name: newWorldName.value.trim(),
+    slug: newWorldSlug.value.trim(),
+  })
+  newWorldName.value = ""
+  newWorldSlug.value = ""
+}
 
 function exportData() {
   // TODO: call backend /api/export
@@ -206,6 +257,54 @@ function confirmClear() {
   justify-content: space-between;
   gap: var(--space-4);
   padding: var(--space-4) 0;
+}
+
+.setting-row.stacked {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.world-form {
+  display: grid;
+  grid-template-columns: 1fr 160px auto;
+  gap: var(--space-2);
+}
+
+.world-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.world-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.world-row.active {
+  border-color: var(--color-accent-cyan);
+  color: var(--color-accent-cyan);
+}
+
+.world-row code {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 720px) {
+  .world-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .setting-row + .setting-row {

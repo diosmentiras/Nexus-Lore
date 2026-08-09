@@ -45,13 +45,14 @@
         <option value="location">地点</option>
         <option value="event">事件</option>
         <option value="containment">收容物</option>
+        <option value="world">世界观</option>
       </select>
     </div>
 
     <!-- Lore Grid -->
     <transition name="list" mode="out-in">
       <div v-if="filteredLore.length" class="lore-grid" :key="'grid'">
-        <LoreCard v-for="item in filteredLore" :key="item.id" :lore="item" @click="navigateTo('/lore/' + item.id)" />
+        <LoreCard v-for="item in filteredLore" :key="item.id" :lore="item" @click="openLore(item.id)" />
       </div>
       <div v-else class="empty-state" :key="'empty'">
         <BookOpenIcon :size="48" class="empty-icon" aria-hidden="true" />
@@ -63,20 +64,60 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"
+import { ref, computed, onMounted, watch } from "vue"
+import { useRoute } from "vue-router"
 import {
-  Sparkles,
-  Plus,
-  Search,
-  BookOpen,
+  Sparkles as SparklesIcon,
+  Plus as PlusIcon,
+  Search as SearchIcon,
+  BookOpen as BookOpenIcon,
 } from "lucide-vue-next"
 
 const search = ref("")
 const typeFilter = ref("")
 const showEditor = ref(false)
 const showAiPanel = ref(false)
+const route = useRoute()
 
+interface EntityResponse {
+  id: string
+  name: string
+  entity_type: string
+  tags: string[]
+  summary?: string | null
+}
+
+const { selectedWorldId, loadWorlds, selectWorld } = useWorlds()
+const apiBase = useApiBase()
 const loreItems = ref<Array<{ id: string; name: string; type: string; tags: string[]; summary: string }>>([])
+const loading = ref(false)
+
+function openLore(id: string) {
+  const worldId = typeof route.params.worldId === "string" ? route.params.worldId : ""
+  return navigateTo(worldId ? `/worlds/${worldId}/lore/${id}` : `/lore/${id}`)
+}
+
+async function loadLore() {
+  if (!selectedWorldId.value) return
+  loading.value = true
+  try {
+    const query: Record<string, string> = {}
+    if (route.query.scope !== "all") query.world_id = selectedWorldId.value
+    if (typeof route.query.type === "string" && route.query.type) query.type = route.query.type
+    const entities = await $fetch<EntityResponse[]>(`${apiBase}/api/entities`, {
+      query,
+    })
+    loreItems.value = entities.map((entity) => ({
+      id: entity.id,
+      name: entity.name,
+      type: entity.entity_type,
+      tags: entity.tags || [],
+      summary: entity.summary || "",
+    }))
+  } finally {
+    loading.value = false
+  }
+}
 
 const filteredLore = computed(() => {
   return loreItems.value.filter((item) => {
@@ -95,7 +136,23 @@ const filteredLore = computed(() => {
 function onExtracted(items: any[]) {
   loreItems.value.push(...items)
   showAiPanel.value = false
+  loadLore()
 }
+
+onMounted(async () => {
+  await loadWorlds()
+  const requestedWorldId = typeof route.params.worldId === "string"
+    ? route.params.worldId
+    : (typeof route.query.world_id === "string" ? route.query.world_id : "")
+  if (requestedWorldId) selectWorld(requestedWorldId)
+  if (typeof route.query.type === "string") typeFilter.value = route.query.type
+  if (typeof route.query.search === "string") search.value = route.query.search
+  await loadLore()
+})
+
+watch(selectedWorldId, () => {
+  if (route.query.scope !== "all") loadLore()
+})
 </script>
 
 <style scoped>

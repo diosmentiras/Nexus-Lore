@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue"
-import { Building2 } from "lucide-vue-next"
+import { Building2 as Building2Icon } from "lucide-vue-next"
 
 const props = defineProps<{
   lore: {
@@ -50,6 +50,7 @@ const typeLabels: Record<string, string> = {
   location: "地点",
   event: "事件",
   containment: "收容物",
+  world: "世界观",
 }
 
 const typeLabel = computed(() => typeLabels[props.lore.type] || props.lore.type)
@@ -87,6 +88,7 @@ const typeLabel = computed(() => typeLabels[props.lore.type] || props.lore.type)
 .lore-card.type-location::before { background: var(--color-success); }
 .lore-card.type-event::before { background: var(--color-warning); }
 .lore-card.type-containment::before { background: var(--color-danger); }
+.lore-card.type-world::before { background: var(--color-accent-purple); }
 
 .lore-card:hover {
   border-color: var(--color-border-hover);

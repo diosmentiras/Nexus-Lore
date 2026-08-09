@@ -68,13 +68,13 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import {
-  X,
-  FileText,
-  Sparkles,
-  Loader,
-  Code,
-  FileJson,
-  Save,
+  X as XIcon,
+  FileText as FileTextIcon,
+  Sparkles as SparklesIcon,
+  Loader as LoaderIcon,
+  Code as CodeIcon,
+  FileJson as FileJsonIcon,
+  Save as SaveIcon,
 } from "lucide-vue-next"
 
 const emit = defineEmits<{ close: [] }>()
@@ -82,12 +82,26 @@ const emit = defineEmits<{ close: [] }>()
 const rawText = ref("")
 const extracting = ref(false)
 const results = ref<any[]>([])
+const apiBase = useApiBase()
+const { selectedWorldId } = useWorlds()
 
 async function extract() {
   extracting.value = true
-  await new Promise((r) => setTimeout(r, 2000))
-  extracting.value = false
-  results.value = []
+  try {
+    const response = await $fetch<{ entities: any[]; events: any[] }>(`${apiBase}/api/extract`, {
+      method: "POST",
+      body: {
+        text: rawText.value,
+        world_id: selectedWorldId.value || undefined,
+      },
+    })
+    results.value = [
+      ...response.entities.map((entity) => ({ ...entity, type: entity.entity_type })),
+      ...response.events.map((event) => ({ ...event, type: "event" })),
+    ]
+  } finally {
+    extracting.value = false
+  }
 }
 
 function formatYaml(item: any): string {

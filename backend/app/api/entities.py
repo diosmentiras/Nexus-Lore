@@ -9,12 +9,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models import Entity
 from app.schemas import EntityCreate, EntityResponse, EntityUpdate
+from app.services.world_service import resolve_world_id
 
 router = APIRouter(prefix="/api/entities", tags=["Entities"])
 
 
 @router.get("", response_model=list[EntityResponse])
 async def list_entities(
+    world_id: str | None = Query(None),
     type: str | None = Query(None),
     search: str | None = Query(None),
     tag: str | None = Query(None),
@@ -22,6 +24,8 @@ async def list_entities(
     db: AsyncSession = Depends(get_db),
 ):
     stmt = select(Entity).order_by(Entity.updated_at.desc())
+    if world_id:
+        stmt = stmt.where(Entity.world_id == world_id)
     if type:
         stmt = stmt.where(Entity.entity_type == type)
     if search:
@@ -44,7 +48,9 @@ async def get_entity(entity_id: str, db: AsyncSession = Depends(get_db)):
 
 @router.post("", response_model=EntityResponse, status_code=201)
 async def create_entity(data: EntityCreate, db: AsyncSession = Depends(get_db)):
-    entity = Entity(**data.model_dump())
+    values = data.model_dump(by_alias=True)
+    values["world_id"] = await resolve_world_id(db, values.get("world_id"))
+    entity = Entity(**values)
     db.add(entity)
     await db.flush()
     await db.refresh(entity)
@@ -56,7 +62,10 @@ async def update_entity(entity_id: str, data: EntityUpdate, db: AsyncSession = D
     entity = await db.get(Entity, entity_id)
     if not entity:
         raise HTTPException(404, "Entity not found")
-    for key, val in data.model_dump(exclude_unset=True).items():
+    update = data.model_dump(exclude_unset=True, by_alias=True)
+    if "world_id" in update:
+        update["world_id"] = await resolve_world_id(db, update["world_id"])
+    for key, val in update.items():
         setattr(entity, key, val)
     await db.flush()
     await db.refresh(entity)

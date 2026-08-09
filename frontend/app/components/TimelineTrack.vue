@@ -1,205 +1,158 @@
 ﻿<template>
-  <div class="timeline-track" :style="{ width: trackWidth + 'px' }">
-    <!-- 时间轴基线 -->
-    <div class="timeline-base"></div>
-
-    <!-- 刻度 -->
-    <div v-for="tick in ticks" :key="tick.year" class="tick" :style="{ left: tick.x + 'px' }">
-      <div class="tick-line"></div>
-      <span class="tick-label">{{ tick.year }}</span>
-    </div>
-
-    <!-- 事件 -->
-    <div
-      v-for="event in sortedEvents"
-      :key="event.id"
-      class="event-marker"
-      :style="{ left: positionX(event) + 'px' }"
-      @click="$emit('eventClick', event)"
-      role="button"
-      :tabindex="0"
-      @keydown.enter="$emit('eventClick', event)"
-    >
-      <div class="marker-dot">
-        <div class="marker-pulse"></div>
+  <ol class="timeline-list" aria-label="世界观时间线">
+    <li v-for="(event, index) in sortedEvents" :key="event.id" class="timeline-event">
+      <div class="timeline-rail" aria-hidden="true">
+        <span class="event-index">{{ String(index + 1).padStart(2, "0") }}</span>
+        <span v-if="index < sortedEvents.length - 1" class="rail-line"></span>
       </div>
-      <div class="event-card">
-        <span class="event-date">{{ event.date }}</span>
-        <span class="event-title">{{ event.title }}</span>
-        <span v-if="event.description" class="event-desc">{{ event.description }}</span>
-      </div>
-    </div>
-  </div>
+      <article class="event-content">
+        <header class="event-header">
+          <time class="event-date">{{ event.date }}</time>
+          <span v-if="event.date_context" class="date-context">{{ event.date_context }}</span>
+        </header>
+        <h3>{{ event.title }}</h3>
+        <p v-if="event.description" class="event-description">{{ event.description }}</p>
+        <div v-if="event.tags?.length" class="event-tags">
+          <span v-for="tag in event.tags" :key="tag">{{ tag }}</span>
+        </div>
+      </article>
+    </li>
+  </ol>
 </template>
 
 <script setup lang="ts">
 import { computed } from "vue"
 
-const props = defineProps<{
-  events: Array<{ id: string; title: string; date: string; description?: string; entities?: string[] }>
-  zoom: number
-}>()
+interface TimelineEvent {
+  id: string
+  title: string
+  date: string
+  date_order?: number
+  date_context?: string
+  description?: string
+  entities?: string[]
+  tags?: string[]
+}
 
-defineEmits<{ eventClick: [event: any] }>()
+const props = defineProps<{ events: TimelineEvent[] }>()
 
-const PADDING = 100
-const BASE_SPACING = 80
+const sortedEvents = computed(() => [...props.events].sort((a, b) => {
+  const orderDifference = sortableDate(a) - sortableDate(b)
+  if (orderDifference) return orderDifference
+  return a.date.localeCompare(b.date, "zh-CN")
+}))
 
-const sortedEvents = computed(() => [...props.events].sort((a, b) => parseInt(a.date) - parseInt(b.date)))
-
-const ticks = computed(() => {
-  if (!sortedEvents.value.length) return []
-  const min = parseInt(sortedEvents.value[0].date)
-  const max = parseInt(sortedEvents.value[sortedEvents.value.length - 1].date)
-  const step = Math.max(1, Math.floor((max - min) / 8))
-  const years: number[] = []
-  for (let y = min; y <= max; y += step) years.push(y)
-  if (years[years.length - 1] !== max) years.push(max)
-  const tw = trackWidth.value
-  const span = Math.max(max - min, 1)
-  return years.map((year) => ({
-    year,
-    x: PADDING + ((year - min) / span) * (tw - PADDING * 2),
-  }))
-})
-
-const trackWidth = computed(() => {
-  if (!sortedEvents.value.length) return 800
-  const minYear = parseInt(sortedEvents.value[0].date)
-  const maxYear = parseInt(sortedEvents.value[sortedEvents.value.length - 1].date)
-  const span = Math.max(maxYear - minYear, 1)
-  return span * BASE_SPACING * props.zoom + PADDING * 2
-})
-
-function positionX(event: { date: string }): number {
-  if (!sortedEvents.value.length) return PADDING
-  const minYear = parseInt(sortedEvents.value[0].date)
-  const maxYear = parseInt(sortedEvents.value[sortedEvents.value.length - 1].date)
-  const span = Math.max(maxYear - minYear, 1)
-  const year = parseInt(event.date)
-  return PADDING + ((year - minYear) / span) * (trackWidth.value - PADDING * 2)
+function sortableDate(event: TimelineEvent) {
+  const parts = event.date.match(/\d+/g)?.map(Number) || []
+  if (parts.length) return parts[0] * 10000 + (parts[1] || 0) * 100 + (parts[2] || 0)
+  return event.date_order || Number.MAX_SAFE_INTEGER
 }
 </script>
 
 <style scoped>
-.timeline-track {
-  position: relative;
-  height: 100%;
-  min-height: 400px;
-  padding-top: 80px;
-}
-
-/* Base line */
-.timeline-base {
-  position: absolute;
-  top: 60px;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(to right, transparent, var(--color-accent-cyan), transparent);
-  opacity: 0.3;
-}
-
-/* Ticks */
-.tick {
-  position: absolute;
-  top: 50px;
-  transform: translateX(-50%);
-}
-
-.tick-line {
-  width: 1px;
-  height: 20px;
-  background: var(--color-border);
+.timeline-list {
+  list-style: none;
+  width: min(920px, 100%);
   margin: 0 auto;
 }
 
-.tick-label {
-  display: block;
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  text-align: center;
-  margin-top: 2px;
-  font-variant-numeric: tabular-nums;
+.timeline-event {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: var(--space-4);
+  min-width: 0;
 }
 
-/* Events */
-.event-marker {
-  position: absolute;
-  top: 0;
-  cursor: pointer;
-}
-
-.marker-dot {
-  position: absolute;
-  top: 56px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 14px;
-  background: var(--color-accent-cyan);
-  border-radius: 50%;
-  box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
-  z-index: 1;
-}
-
-.marker-pulse {
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 2px solid rgba(0, 240, 255, 0.2);
-  animation: pulse 2s ease-out infinite;
-}
-
-@keyframes pulse {
-  0% { transform: scale(1); opacity: 1; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
-.event-card {
-  position: absolute;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-3) var(--space-4);
-  white-space: nowrap;
+.timeline-rail {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  opacity: 0.85;
-  transition: all var(--duration-fast) var(--easing-default);
-  min-width: 120px;
+  min-height: 100%;
 }
 
-.event-marker:hover .event-card {
-  opacity: 1;
-  border-color: var(--color-accent-cyan);
-  box-shadow: var(--shadow-glow-cyan);
-  transform: translateX(-50%) translateY(-2px);
+.event-index {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--color-border-focus);
+  border-radius: 50%;
+  color: var(--color-accent-cyan);
+  background: var(--color-bg-primary);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  flex-shrink: 0;
+}
+
+.rail-line {
+  width: 1px;
+  min-height: 48px;
+  flex: 1;
+  background: var(--color-border);
+}
+
+.event-content {
+  min-width: 0;
+  padding: 2px 0 var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-6);
+}
+
+.timeline-event:last-child .event-content {
+  margin-bottom: 0;
+}
+
+.event-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
 }
 
 .event-date {
-  font-size: var(--font-size-xs);
   color: var(--color-accent-cyan);
-  font-weight: var(--font-weight-semibold);
-  font-variant-numeric: tabular-nums;
-}
-
-.event-title {
+  font-family: var(--font-mono);
   font-size: var(--font-size-sm);
-  color: var(--color-text-primary);
-  font-weight: var(--font-weight-medium);
+  font-weight: var(--font-weight-semibold);
 }
 
-.event-desc {
-  font-size: var(--font-size-xs);
+.date-context {
   color: var(--color-text-muted);
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: var(--font-size-xs);
+}
+
+.event-content h3 {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-lg);
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.event-description {
+  margin-top: var(--space-2);
+  color: var(--color-text-secondary);
+  line-height: var(--line-height-relaxed);
+}
+
+.event-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: var(--space-3);
+}
+
+.event-tags span {
+  padding: 2px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: 560px) {
+  .timeline-event { grid-template-columns: 40px minmax(0, 1fr); gap: var(--space-2); }
+  .event-index { width: 30px; height: 30px; }
 }
 </style>

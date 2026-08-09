@@ -38,25 +38,49 @@
 
 <script setup lang="ts">
 import { reactive, ref } from "vue"
-import { Sparkles, X, Loader } from "lucide-vue-next"
+import {
+  Loader as LoaderIcon,
+  Sparkles as SparklesIcon,
+  X as XIcon,
+} from "lucide-vue-next"
 
 const emit = defineEmits<{ close: []; extracted: [items: any[]] }>()
 
 const text = ref("")
 const extracting = ref(false)
+const apiBase = useApiBase()
+const { selectedWorldId } = useWorlds()
 
 const options = reactive([
-  { key: "characters", label: "人物", value: true },
-  { key: "factions", label: "势力", value: true },
-  { key: "items", label: "物品", value: true },
-  { key: "events", label: "事件", value: true },
+  { key: "character", label: "人物", value: true },
+  { key: "faction", label: "势力", value: true },
+  { key: "item", label: "物品", value: true },
+  { key: "event", label: "事件", value: true },
 ])
 
 async function runExtract() {
   extracting.value = true
-  await new Promise((r) => setTimeout(r, 2000))
-  extracting.value = false
-  emit("extracted", [])
+  try {
+    const result = await $fetch<{ entities: any[]; events: any[] }>(`${apiBase}/api/extract`, {
+      method: "POST",
+      body: {
+        text: text.value,
+        world_id: selectedWorldId.value || undefined,
+        types: options.filter((opt) => opt.value).map((opt) => opt.key),
+      },
+    })
+    emit("extracted", [
+      ...result.entities.map((entity) => ({
+        id: entity.name,
+        name: entity.name,
+        type: entity.entity_type,
+        tags: entity.tags || [],
+        summary: entity.summary || "",
+      })),
+    ])
+  } finally {
+    extracting.value = false
+  }
 }
 </script>
 

@@ -61,13 +61,13 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import {
-  SearchCheck,
-  RefreshCw,
-  ShieldCheck,
-  AlertCircle,
-  AlertTriangle,
-  ArrowRight,
-  ChevronRight,
+  SearchCheck as SearchCheckIcon,
+  RefreshCw as RefreshCwIcon,
+  ShieldCheck as ShieldCheckIcon,
+  AlertCircle as AlertCircleIcon,
+  AlertTriangle as AlertTriangleIcon,
+  ArrowRight as ArrowRightIcon,
+  ChevronRight as ChevronRightIcon,
 } from "lucide-vue-next"
 
 const linting = ref(false)
