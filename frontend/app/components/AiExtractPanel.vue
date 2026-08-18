@@ -32,6 +32,7 @@
         <SparklesIcon v-else :size="16" aria-hidden="true" />
         <span>{{ extracting ? "解析中..." : "开始提取" }}</span>
       </button>
+      <p v-if="errorMessage" class="extract-error">{{ errorMessage }}</p>
     </div>
   </div>
 </template>
@@ -48,6 +49,7 @@ const emit = defineEmits<{ close: []; extracted: [items: any[]] }>()
 
 const text = ref("")
 const extracting = ref(false)
+const errorMessage = ref("")
 const apiBase = useApiBase()
 const { selectedWorldId } = useWorlds()
 
@@ -55,11 +57,14 @@ const options = reactive([
   { key: "character", label: "人物", value: true },
   { key: "faction", label: "势力", value: true },
   { key: "item", label: "物品", value: true },
+  { key: "location", label: "地点", value: true },
   { key: "event", label: "事件", value: true },
+  { key: "containment", label: "异常", value: true },
 ])
 
 async function runExtract() {
   extracting.value = true
+  errorMessage.value = ""
   try {
     const result = await $fetch<{ entities: any[]; events: any[] }>(`${apiBase}/api/extract`, {
       method: "POST",
@@ -78,6 +83,8 @@ async function runExtract() {
         summary: entity.summary || "",
       })),
     ])
+  } catch (error: any) {
+    errorMessage.value = error?.data?.detail || error?.message || "AI 提取失败，请先在设置页测试连接"
   } finally {
     extracting.value = false
   }
@@ -252,6 +259,8 @@ async function runExtract() {
 .spin {
   animation: spin 1s linear infinite;
 }
+
+.extract-error { color: var(--color-danger); font-size: var(--font-size-xs); line-height: var(--line-height-normal); }
 
 @keyframes spin {
   to { transform: rotate(360deg); }

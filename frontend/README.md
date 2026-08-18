@@ -1,75 +1,32 @@
-# Nuxt Minimal Starter
+# Nexus-Lore Frontend
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Nuxt 4 前端，提供世界库和单世界工作区。
 
-## Setup
+## 页面
 
-Make sure to install dependencies:
+- `/worlds`：世界库与全局统计。
+- `/worlds/:worldId/overview`：世界总览。
+- `/worlds/:worldId/sources`：来源目录与正文。
+- `/worlds/:worldId/lore`：结构化设定与详情。
+- `/worlds/:worldId/chronicle`：时间线。
+- `/worlds/:worldId/nexus`：3D 关系图。
+- `/worlds/:worldId/linter`：设定一致性检查。
+- `/settings`：世界、AI 状态与数据管理。
 
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+## 开发
 
 ```bash
-# npm
+npm ci
 npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
 ```
 
-## Production
+默认将 `/api/**` 代理到 `http://127.0.0.1:8000/api/**`。容器构建可通过 `NUXT_API_PROXY` 指定后端地址。
 
-Build the application for production:
+## 构建
 
 ```bash
-# npm
 npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
+node .output/server/index.mjs
 ```
 
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+提交前至少运行一次生产构建，并检查桌面端和 390px 宽度移动端的导航、文本溢出与控制台错误。

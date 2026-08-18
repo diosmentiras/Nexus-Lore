@@ -87,6 +87,40 @@ class AiService:
         result = await self.extract_lore(text, types)
         return result["entities"]
 
+    def public_config(self) -> dict[str, Any]:
+        return {
+            "provider": self.provider,
+            "endpoint": self.endpoint,
+            "model": self.model,
+            "has_api_key": bool(self.api_key),
+        }
+
+    async def test_connection(self) -> dict[str, Any]:
+        """Verify that the configured provider is reachable without generating text."""
+        if self.provider == "ollama":
+            url = self.endpoint.rstrip("/") + "/api/tags"
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(url)
+                response.raise_for_status()
+            models = [item.get("name") for item in response.json().get("models", []) if item.get("name")]
+            return {"ok": True, "provider": self.provider, "models": models, "model_available": self.model in models}
+
+        if self.provider in {"openai", "deepseek"}:
+            if not self.api_key:
+                return {"ok": False, "provider": self.provider, "detail": "API key is not configured"}
+            endpoint = self.endpoint
+            if self.provider == "openai" and endpoint == "http://localhost:11434":
+                endpoint = "https://api.openai.com/v1"
+            if self.provider == "deepseek" and endpoint == "http://localhost:11434":
+                endpoint = "https://api.deepseek.com"
+            headers = {"Authorization": f"Bearer {self.api_key}"}
+            async with httpx.AsyncClient(timeout=10, headers=headers) as client:
+                response = await client.get(endpoint.rstrip("/") + "/models")
+                response.raise_for_status()
+            return {"ok": True, "provider": self.provider, "model_available": True}
+
+        return {"ok": False, "provider": self.provider, "detail": "Unsupported AI provider"}
+
     async def _extract_with_ollama(self, messages: list[dict[str, str]]) -> dict[str, list[dict[str, Any]]]:
         url = self.endpoint.rstrip("/") + "/api/chat"
         async with httpx.AsyncClient(timeout=120) as client:
@@ -129,18 +163,5 @@ class AiService:
         except json.JSONDecodeError:
             return self._empty_result()
         return self._normalize_result(parsed)
-
-    async def resolve_fuzzy_date(self, context: str) -> str | None:
-        """解析模糊时间描述（如"三年后"）"""
-        return None
-
-    async def lint_timeline(self) -> list[dict]:
-        """时间线一致性检查"""
-        return []
-
-    async def lint_factions(self) -> list[dict]:
-        """派系一致性检查"""
-        return []
-
 
 ai_service = AiService()

@@ -15,6 +15,7 @@ export function useApiBase() {
 }
 
 export function useWorlds() {
+  const nuxtApp = useNuxtApp()
   const worlds = useState<World[]>("worlds", () => [])
   const selectedWorldId = useState<string>("selectedWorldId", () => "")
   const loadingWorlds = useState<boolean>("loadingWorlds", () => false)
@@ -33,7 +34,7 @@ export function useWorlds() {
 
   async function loadWorlds() {
     if (worlds.value.length) {
-      applyWorldSelection()
+      if (!import.meta.client || !nuxtApp.isHydrating) applyWorldSelection()
       return
     }
     if (loadingWorlds.value) return
@@ -57,6 +58,18 @@ export function useWorlds() {
     return world
   }
 
+  async function deleteWorld(worldId: string) {
+    await $fetch(`${API_BASE}/api/worlds/${worldId}`, { method: "DELETE" })
+    worlds.value = worlds.value.filter((world) => world.id !== worldId)
+    if (selectedWorldId.value === worldId) {
+      selectedWorldId.value = worlds.value[0]?.id || ""
+      if (import.meta.client) {
+        if (selectedWorldId.value) localStorage.setItem(SELECTED_WORLD_KEY, selectedWorldId.value)
+        else localStorage.removeItem(SELECTED_WORLD_KEY)
+      }
+    }
+  }
+
   function selectWorld(worldId: string) {
     selectedWorldId.value = worldId
     if (import.meta.client) localStorage.setItem(SELECTED_WORLD_KEY, worldId)
@@ -68,6 +81,7 @@ export function useWorlds() {
     loadingWorlds,
     loadWorlds,
     createWorld,
+    deleteWorld,
     selectWorld,
   }
 }

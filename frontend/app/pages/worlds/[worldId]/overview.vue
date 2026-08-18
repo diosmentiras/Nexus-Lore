@@ -70,6 +70,7 @@
           <NuxtLink :to="`/worlds/${world.id}/sources`"><FilesIcon :size="16" /><span>检查来源文章</span><ChevronRightIcon :size="15" /></NuxtLink>
           <NuxtLink :to="`/worlds/${world.id}/lore`"><LibraryIcon :size="16" /><span>浏览结构化设定</span><ChevronRightIcon :size="15" /></NuxtLink>
           <NuxtLink :to="`/worlds/${world.id}/nexus`"><NetworkIcon :size="16" /><span>查看实体关系</span><ChevronRightIcon :size="15" /></NuxtLink>
+          <NuxtLink :to="`/worlds/${world.id}/linter`"><ShieldCheckIcon :size="16" /><span>检查设定冲突</span><ChevronRightIcon :size="15" /></NuxtLink>
         </nav>
       </aside>
     </div>
@@ -88,6 +89,7 @@ import {
   History as HistoryIcon,
   Library as LibraryIcon,
   Network as NetworkIcon,
+  ShieldCheck as ShieldCheckIcon,
 } from "lucide-vue-next"
 
 interface WorldSummary {

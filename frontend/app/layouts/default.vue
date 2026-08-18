@@ -41,7 +41,7 @@
           <SettingsIcon class="nav-icon" :size="18" aria-hidden="true" />
           <span class="nav-label">设置</span>
         </NuxtLink>
-        <div class="version-badge">v0.1.0</div>
+        <div class="version-badge">v0.2.0</div>
       </div>
     </aside>
 
@@ -60,6 +60,7 @@ import {
   LayoutDashboard as LayoutDashboardIcon,
   Network as NetworkIcon,
   Settings as SettingsIcon,
+  ShieldCheck as ShieldCheckIcon,
   type LucideIcon,
 } from "lucide-vue-next"
 
@@ -80,6 +81,7 @@ const workspaceNav = computed<WorkspaceNavItem[]>(() => {
     { section: "lore", label: "Lore", icon: BookOpenIcon, to: `${base}/lore` },
     { section: "chronicle", label: "时间线", icon: HistoryIcon, to: `${base}/chronicle` },
     { section: "nexus", label: "关系图", icon: NetworkIcon, to: `${base}/nexus` },
+    { section: "linter", label: "检查", icon: ShieldCheckIcon, to: `${base}/linter` },
   ]
 })
 

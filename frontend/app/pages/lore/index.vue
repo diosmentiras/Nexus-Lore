@@ -26,7 +26,7 @@
     <Teleport to="body">
       <transition name="fade">
         <div v-if="showEditor" class="modal-overlay" @click.self="showEditor = false">
-          <LoreEditor @close="showEditor = false" />
+          <LoreEditor @close="showEditor = false" @saved="loadLore" />
         </div>
       </transition>
     </Teleport>

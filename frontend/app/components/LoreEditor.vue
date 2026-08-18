@@ -52,14 +52,15 @@
             </div>
           </div>
         </transition>
+        <p v-if="errorMessage" class="extract-error">{{ errorMessage }}</p>
       </div>
     </div>
 
     <div class="editor-footer">
       <button class="btn btn-ghost" @click="$emit('close')">取消</button>
-      <button class="btn btn-primary" @click="saveAll">
-        <SaveIcon :size="16" aria-hidden="true" />
-        保存全部
+      <button class="btn btn-primary" :disabled="!results.length" @click="finish">
+        <CircleCheckIcon :size="16" aria-hidden="true" />
+        完成
       </button>
     </div>
   </div>
@@ -74,19 +75,21 @@ import {
   Loader as LoaderIcon,
   Code as CodeIcon,
   FileJson as FileJsonIcon,
-  Save as SaveIcon,
+  CircleCheck as CircleCheckIcon,
 } from "lucide-vue-next"
 
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: []; saved: [] }>()
 
 const rawText = ref("")
 const extracting = ref(false)
 const results = ref<any[]>([])
+const errorMessage = ref("")
 const apiBase = useApiBase()
 const { selectedWorldId } = useWorlds()
 
 async function extract() {
   extracting.value = true
+  errorMessage.value = ""
   try {
     const response = await $fetch<{ entities: any[]; events: any[] }>(`${apiBase}/api/extract`, {
       method: "POST",
@@ -99,6 +102,8 @@ async function extract() {
       ...response.entities.map((entity) => ({ ...entity, type: entity.entity_type })),
       ...response.events.map((event) => ({ ...event, type: "event" })),
     ]
+  } catch (error: any) {
+    errorMessage.value = error?.data?.detail || error?.message || "AI 提取失败，请先在设置页测试连接"
   } finally {
     extracting.value = false
   }
@@ -108,7 +113,8 @@ function formatYaml(item: any): string {
   return JSON.stringify(item, null, 2)
 }
 
-function saveAll() {
+function finish() {
+  emit("saved")
   emit("close")
 }
 </script>
@@ -337,6 +343,8 @@ function saveAll() {
   font-family: var(--font-mono);
   line-height: var(--line-height-normal);
 }
+
+.extract-error { margin-top: var(--space-3); color: var(--color-danger); font-size: var(--font-size-xs); }
 
 /* Footer */
 .editor-footer {

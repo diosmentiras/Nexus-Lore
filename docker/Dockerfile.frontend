@@ -3,6 +3,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+ARG NUXT_API_PROXY=http://backend:8000/api/**
+ENV NUXT_API_PROXY=$NUXT_API_PROXY
+
 COPY package*.json ./
 RUN npm ci --only=production
 

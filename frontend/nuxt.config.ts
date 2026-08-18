@@ -4,7 +4,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   modules: ["@nuxtjs/tailwindcss"],
   routeRules: {
-    "/api/**": { proxy: "http://127.0.0.1:8000/api/**" },
+    "/api/**": { proxy: process.env.NUXT_API_PROXY || "http://127.0.0.1:8000/api/**" },
   },
   app: {
     head: {

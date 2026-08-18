@@ -98,6 +98,7 @@ const filteredEvents = computed(() => events.value.filter((event) => {
 onMounted(async () => {
   await loadWorlds()
   if (typeof route.params.worldId === "string") selectWorld(route.params.worldId)
+  if (typeof route.query.search === "string") search.value = route.query.search
   await loadEvents()
 })
 

@@ -228,6 +228,10 @@ class LintIssueResponse(LintIssueBase):
     model_config = {"from_attributes": True, "populate_by_name": True}
 
 
+class LintIssueUpdate(BaseModel):
+    resolved: bool
+
+
 # ===================== AI Extract =====================
 
 class AiExtractRequest(BaseModel):
